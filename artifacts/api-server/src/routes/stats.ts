@@ -3,14 +3,12 @@ import { db } from "@workspace/db";
 import { toolsTable, planningsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
+const OWNER_ID = "owner";
 const router = Router();
 
-router.get("/stats", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
-
-  const tools = await db.select().from(toolsTable).where(eq(toolsTable.userId, userId));
-  const plannings = await db.select().from(planningsTable).where(eq(planningsTable.userId, userId));
+router.get("/stats", async (_req, res) => {
+  const tools = await db.select().from(toolsTable).where(eq(toolsTable.userId, OWNER_ID));
+  const plannings = await db.select().from(planningsTable).where(eq(planningsTable.userId, OWNER_ID));
 
   const totalTools = tools.length;
   const publishedTools = tools.filter(t => t.status === "Publish").length;

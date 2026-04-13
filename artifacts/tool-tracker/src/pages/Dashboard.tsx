@@ -10,7 +10,6 @@ import {
   useGetAccounts, useCreateAccount, getGetAccountsQueryKey,
   useGetStats, getGetStatsQueryKey,
 } from "@workspace/api-client-react";
-import { useAuth } from "@workspace/replit-auth-web";
 import type { Tool, Planning, Log, TabType } from "@/types";
 
 const CREATED_WITH_OPTIONS = ["Z.ai", "Gemini Canvas", "Lovable", "Replit", "GPT", "Manual Coding"];
@@ -288,7 +287,6 @@ type LogTarget = { type: "tool" | "planning"; itemId: number; log?: Log } | null
 
 /* ─────────────── main dashboard ─────────────── */
 export default function Dashboard() {
-  const { user, logout } = useAuth();
   const qc = useQueryClient();
 
   const { data: tools = [] } = useGetTools<Tool[]>();
@@ -493,25 +491,17 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Profile + menu */}
+            {/* Menu */}
             <div className="relative flex-shrink-0">
-              <button onClick={() => setMenuOpen(v => !v)} className="flex items-center gap-1.5">
-                {user?.profileImage
-                  ? <img src={user.profileImage} alt="" className="w-8 h-8 rounded-full border-2 border-emerald-500/40" />
-                  : <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">{user?.name?.[0] || "?"}</div>
-                }
-                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <button onClick={() => setMenuOpen(v => !v)}
+                className="w-9 h-9 rounded-xl bg-slate-800/70 flex items-center justify-center text-slate-400 active:text-white transition">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-10 z-50 glass-card rounded-2xl overflow-hidden min-w-44 shadow-xl border border-slate-700/40">
-                  <button onClick={handleBackup} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-white/5 active:bg-white/10 transition">
+                <div className="absolute right-0 top-11 z-50 glass-card rounded-2xl overflow-hidden min-w-44 shadow-xl border border-slate-700/40">
+                  <button onClick={handleBackup} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-slate-300 hover:bg-white/5 active:bg-white/10 transition">
                     <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     Backup Data
-                  </button>
-                  <div className="border-t border-slate-700/40" />
-                  <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-900/20 active:bg-red-900/30 transition">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                    Keluar
                   </button>
                 </div>
               )}

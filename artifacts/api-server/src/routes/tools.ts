@@ -4,14 +4,12 @@ import { toolsTable, logsTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { CreateToolBody, UpdateToolBody } from "@workspace/api-zod";
 
+const OWNER_ID = "owner";
 const router = Router();
 
-router.get("/tools", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
-
-  const tools = await db.select().from(toolsTable).where(eq(toolsTable.userId, userId)).orderBy(desc(toolsTable.createdAt));
-  const logs = await db.select().from(logsTable).where(and(eq(logsTable.userId, userId), eq(logsTable.itemType, "tool")));
+router.get("/tools", async (_req, res) => {
+  const tools = await db.select().from(toolsTable).where(eq(toolsTable.userId, OWNER_ID)).orderBy(desc(toolsTable.createdAt));
+  const logs = await db.select().from(logsTable).where(and(eq(logsTable.userId, OWNER_ID), eq(logsTable.itemType, "tool")));
 
   const result = tools.map(tool => ({
     id: tool.id,
@@ -36,15 +34,12 @@ router.get("/tools", async (req, res) => {
 });
 
 router.post("/tools", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
-
   const parsed = CreateToolBody.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
 
   const body = parsed.data;
   const [tool] = await db.insert(toolsTable).values({
-    userId,
+    userId: OWNER_ID,
     name: body.name,
     description: body.description ?? "",
     url: body.url ?? "",
@@ -61,8 +56,6 @@ router.post("/tools", async (req, res) => {
 });
 
 router.patch("/tools/:toolId", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
   const toolId = parseInt(req.params.toolId);
 
   const parsed = UpdateToolBody.safeParse(req.body);
@@ -80,11 +73,11 @@ router.patch("/tools/:toolId", async (req, res) => {
     deployByAccount: body.deployByAccount ?? "",
     version: body.version ?? "",
     releaseDate: body.releaseDate ?? "",
-  }).where(and(eq(toolsTable.id, toolId), eq(toolsTable.userId, userId))).returning();
+  }).where(and(eq(toolsTable.id, toolId), eq(toolsTable.userId, OWNER_ID))).returning();
 
   if (!updated) return res.status(404).json({ error: "Not found" });
 
-  const logs = await db.select().from(logsTable).where(and(eq(logsTable.userId, userId), eq(logsTable.itemId, toolId), eq(logsTable.itemType, "tool")));
+  const logs = await db.select().from(logsTable).where(and(eq(logsTable.userId, OWNER_ID), eq(logsTable.itemId, toolId), eq(logsTable.itemType, "tool")));
   return res.json({
     ...updated,
     createdAt: updated.createdAt.toISOString(),
@@ -93,39 +86,31 @@ router.patch("/tools/:toolId", async (req, res) => {
 });
 
 router.delete("/tools/:toolId", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
   const toolId = parseInt(req.params.toolId);
-
-  await db.delete(logsTable).where(and(eq(logsTable.userId, userId), eq(logsTable.itemId, toolId), eq(logsTable.itemType, "tool")));
-  await db.delete(toolsTable).where(and(eq(toolsTable.id, toolId), eq(toolsTable.userId, userId)));
+  await db.delete(logsTable).where(and(eq(logsTable.userId, OWNER_ID), eq(logsTable.itemId, toolId), eq(logsTable.itemType, "tool")));
+  await db.delete(toolsTable).where(and(eq(toolsTable.id, toolId), eq(toolsTable.userId, OWNER_ID)));
   return res.status(204).send();
 });
 
 router.post("/tools/:toolId/logs", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
   const toolId = parseInt(req.params.toolId);
-
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: "Text required" });
 
   const date = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-  const [log] = await db.insert(logsTable).values({ userId, itemId: toolId, itemType: "tool", text, date, completed: false }).returning();
+  const [log] = await db.insert(logsTable).values({ userId: OWNER_ID, itemId: toolId, itemType: "tool", text, date, completed: false }).returning();
   return res.status(201).json({ id: log.id, text: log.text, date: log.date, completed: log.completed });
 });
 
 router.post("/tools/:toolId/convert", async (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-  const userId = req.user!.id;
   const planningId = parseInt(req.params.toolId);
-
   const { planningsTable } = await import("@workspace/db");
-  const [plan] = await db.select().from(planningsTable).where(and(eq(planningsTable.id, planningId), eq(planningsTable.userId, userId)));
+
+  const [plan] = await db.select().from(planningsTable).where(and(eq(planningsTable.id, planningId), eq(planningsTable.userId, OWNER_ID)));
   if (!plan) return res.status(404).json({ error: "Not found" });
 
   const [newTool] = await db.insert(toolsTable).values({
-    userId,
+    userId: OWNER_ID,
     name: plan.name,
     description: plan.description,
     url: plan.url,
@@ -138,15 +123,15 @@ router.post("/tools/:toolId/convert", async (req, res) => {
     releaseDate: "",
   }).returning();
 
-  const planLogs = await db.select().from(logsTable).where(and(eq(logsTable.userId, userId), eq(logsTable.itemId, planningId), eq(logsTable.itemType, "planning")));
+  const planLogs = await db.select().from(logsTable).where(and(eq(logsTable.userId, OWNER_ID), eq(logsTable.itemId, planningId), eq(logsTable.itemType, "planning")));
   for (const log of planLogs) {
-    await db.insert(logsTable).values({ userId, itemId: newTool.id, itemType: "tool", text: log.text, date: log.date, completed: log.completed });
+    await db.insert(logsTable).values({ userId: OWNER_ID, itemId: newTool.id, itemType: "tool", text: log.text, date: log.date, completed: log.completed });
   }
 
-  await db.delete(logsTable).where(and(eq(logsTable.userId, userId), eq(logsTable.itemId, planningId), eq(logsTable.itemType, "planning")));
-  await db.delete(planningsTable).where(and(eq(planningsTable.id, planningId), eq(planningsTable.userId, userId)));
+  await db.delete(logsTable).where(and(eq(logsTable.userId, OWNER_ID), eq(logsTable.itemId, planningId), eq(logsTable.itemType, "planning")));
+  await db.delete(planningsTable).where(and(eq(planningsTable.id, planningId), eq(planningsTable.userId, OWNER_ID)));
 
-  const toolLogs = await db.select().from(logsTable).where(and(eq(logsTable.userId, userId), eq(logsTable.itemId, newTool.id), eq(logsTable.itemType, "tool")));
+  const toolLogs = await db.select().from(logsTable).where(and(eq(logsTable.userId, OWNER_ID), eq(logsTable.itemId, newTool.id), eq(logsTable.itemType, "tool")));
   return res.status(201).json({ ...newTool, createdAt: newTool.createdAt.toISOString(), logs: toolLogs.map(l => ({ id: l.id, text: l.text, date: l.date, completed: l.completed })) });
 });
 
