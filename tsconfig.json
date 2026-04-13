@@ -1,9 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
-  "compilerOptions": {
-    "types": ["vite/client"]
-  },
   "files": [
     "global.d.ts"
   ],
