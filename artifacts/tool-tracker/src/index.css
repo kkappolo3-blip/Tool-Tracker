@@ -172,7 +172,17 @@
 .section-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(100,116,139,0.2), transparent); }
 
 /* Card grid - like phone gallery */
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+@media (max-width: 600px) {
+  .card-grid { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* Scrollbar hide */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Safe area support */
+.pb-safe { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
 
 /* Log item */
 .log-item { transition: background 0.15s; }
