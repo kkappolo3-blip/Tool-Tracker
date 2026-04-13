@@ -3,13 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for Tool Tracker - Gibikey Studio
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: tools
+    description: Tool management
+  - name: plannings
+    description: Planning management
+  - name: logs
+    description: Activity logs
+  - name: accounts
+    description: Account management
 paths:
   /healthz:
     get:
@@ -24,6 +34,333 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      operationId: getAuthUser
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+
+  /tools:
+    get:
+      operationId: getTools
+      tags: [tools]
+      summary: List all tools
+      responses:
+        "200":
+          description: List of tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+    post:
+      operationId: createTool
+      tags: [tools]
+      summary: Create a new tool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolInput"
+      responses:
+        "201":
+          description: Created tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+
+  /tools/{toolId}:
+    patch:
+      operationId: updateTool
+      tags: [tools]
+      summary: Update a tool
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolInput"
+      responses:
+        "200":
+          description: Updated tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+    delete:
+      operationId: deleteTool
+      tags: [tools]
+      summary: Delete a tool
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tools/{toolId}/logs:
+    post:
+      operationId: createToolLog
+      tags: [logs]
+      summary: Add a log to a tool
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogInput"
+      responses:
+        "201":
+          description: Created log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Log"
+
+  /tools/{toolId}/convert:
+    post:
+      operationId: convertPlanningToTool
+      tags: [tools]
+      summary: Convert planning to tool (id = planningId)
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: New tool created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+
+  /plannings:
+    get:
+      operationId: getPlannings
+      tags: [plannings]
+      summary: List all plannings
+      responses:
+        "200":
+          description: List of plannings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Planning"
+    post:
+      operationId: createPlanning
+      tags: [plannings]
+      summary: Create a new planning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanningInput"
+      responses:
+        "201":
+          description: Created planning
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Planning"
+
+  /plannings/{planningId}:
+    patch:
+      operationId: updatePlanning
+      tags: [plannings]
+      summary: Update a planning
+      parameters:
+        - name: planningId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanningInput"
+      responses:
+        "200":
+          description: Updated planning
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Planning"
+    delete:
+      operationId: deletePlanning
+      tags: [plannings]
+      summary: Delete a planning
+      parameters:
+        - name: planningId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /plannings/{planningId}/logs:
+    post:
+      operationId: createPlanningLog
+      tags: [logs]
+      summary: Add a log to a planning
+      parameters:
+        - name: planningId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogInput"
+      responses:
+        "201":
+          description: Created log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Log"
+
+  /plannings/{planningId}/convert:
+    post:
+      operationId: convertPlanningToToolFromPlanning
+      tags: [plannings]
+      summary: Convert planning to tool
+      parameters:
+        - name: planningId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: New tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+
+  /logs/{logId}:
+    patch:
+      operationId: updateLog
+      tags: [logs]
+      summary: Update a log
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogUpdateInput"
+      responses:
+        "200":
+          description: Updated log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Log"
+    delete:
+      operationId: deleteLog
+      tags: [logs]
+      summary: Delete a log
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /accounts:
+    get:
+      operationId: getAccounts
+      tags: [accounts]
+      summary: Get all saved accounts/emails
+      responses:
+        "200":
+          description: List of account emails
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+    post:
+      operationId: createAccount
+      tags: [accounts]
+      summary: Save a new account email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [tools]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Stats object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +371,202 @@ components:
       required:
         - status
 
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        profileImage:
+          type: ["string", "null"]
+      required:
+        - id
+
+    Log:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        date:
+          type: string
+        completed:
+          type: boolean
+      required:
+        - id
+        - text
+        - date
+        - completed
+
+    LogInput:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+
+    LogUpdateInput:
+      type: object
+      properties:
+        text:
+          type: ["string", "null"]
+        completed:
+          type: ["boolean", "null"]
+
+    Tool:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        status:
+          type: string
+          enum: [Pending, Deploy, Publish]
+        createdWith:
+          type: string
+        createdByAccount:
+          type: string
+        deployWith:
+          type: string
+        deployByAccount:
+          type: string
+        version:
+          type: string
+        releaseDate:
+          type: string
+        createdAt:
+          type: string
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Log"
+      required:
+        - id
+        - name
+        - description
+        - url
+        - status
+        - createdWith
+        - createdByAccount
+        - deployWith
+        - deployByAccount
+        - version
+        - releaseDate
+        - createdAt
+        - logs
+
+    ToolInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        status:
+          type: string
+          enum: [Pending, Deploy, Publish]
+        createdWith:
+          type: string
+        createdByAccount:
+          type: string
+        deployWith:
+          type: string
+        deployByAccount:
+          type: string
+        version:
+          type: string
+        releaseDate:
+          type: string
+      required:
+        - name
+
+    Planning:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        category:
+          type: string
+          enum: [Ide, Untuk Dijual, Portofolio, Internal, Abandon]
+        price:
+          type: string
+        target:
+          type: string
+        createdAt:
+          type: string
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Log"
+      required:
+        - id
+        - name
+        - description
+        - url
+        - category
+        - price
+        - target
+        - createdAt
+        - logs
+
+    PlanningInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        category:
+          type: string
+          enum: [Ide, Untuk Dijual, Portofolio, Internal, Abandon]
+        price:
+          type: string
+        target:
+          type: string
+      required:
+        - name
+
+    AccountInput:
+      type: object
+      properties:
+        email:
+          type: string
+      required:
+        - email
+
+    Stats:
+      type: object
+      properties:
+        totalTools:
+          type: integer
+        publishedTools:
+          type: integer
+        totalPlannings:
+          type: integer
+        potentialRevenue:
+          type: integer
+      required:
+        - totalTools
+        - publishedTools
+        - totalPlannings
+        - potentialRevenue

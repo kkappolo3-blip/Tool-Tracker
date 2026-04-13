@@ -17,6 +17,7 @@ export interface Tool {
   deployByAccount: string;
   version: string;
   releaseDate: string;
+  createdAt: string;
   logs: Log[];
 }
 
@@ -28,13 +29,9 @@ export interface Planning {
   category: "Ide" | "Untuk Dijual" | "Portofolio" | "Internal" | "Abandon";
   price: string;
   target: string;
+  createdAt: string;
   logs: Log[];
 }
 
-export interface AppData {
-  tools: Tool[];
-  plannings: Planning[];
-  accounts: string[];
-}
-
 export type TabType = "tools" | "planning";
+export type FormMode = "add" | "edit";
